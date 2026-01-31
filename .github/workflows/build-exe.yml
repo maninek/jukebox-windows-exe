@@ -1,32 +1,37 @@
-name: Build Windows Jukebox EXE
+name: Build Windows 32bit Jukebox EXE
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:  # Manuální spuštění
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2019  # Starší Windows pro lepší Win7 kompatibilitu
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python 3.11
+    - name: Set up Python 3.9 32bit
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
+        python-version: '3.9'
+        architecture: 'x86'  # 32bit!
     
-    - name: Install dependencies
+    - name: Install 32bit dependencies
       run: |
-        pip install pyinstaller
+        pip install --only-binary=all pyinstaller
         
-    - name: Build EXE
+    - name: Build 32bit EXE
       run: |
-        pyinstaller --onefile --noconsole --add-data "jukebox.html;." --name "BarJukebox" jukebox.py
+        pyinstaller --onefile --noconsole --windowed ^
+          --add-data "jukebox.html;." ^
+          --name "BarJukebox32" ^
+          --distpath dist ^
+          jukebox.py
         
-    - name: Upload EXE artifact
+    - name: Upload 32bit EXE
       uses: actions/upload-artifact@v4
       with:
-        name: BarJukebox-EXE
-        path: dist/BarJukebox.exe
+        name: BarJukebox-32bit-Win7
+        path: dist/BarJukebox32.exe
         retention-days: 30
