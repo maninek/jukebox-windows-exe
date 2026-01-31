@@ -1,0 +1,32 @@
+name: Build Windows Jukebox EXE
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Manuální spuštění
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install pyinstaller
+        
+    - name: Build EXE
+      run: |
+        pyinstaller --onefile --noconsole --add-data "jukebox.html;." --name "BarJukebox" jukebox.py
+        
+    - name: Upload EXE artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: BarJukebox-EXE
+        path: dist/BarJukebox.exe
+        retention-days: 30
