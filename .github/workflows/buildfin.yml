@@ -1,0 +1,82 @@
+name: Build Complete Win7 Jukebox 32bit
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2019
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python 3.8 32bit (Win7 kompatibilní)
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+        architecture: 'x86'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller==5.13.2
+    
+    - name: Create spec file with all dependencies
+      run: |
+        echo "# -*- mode: python ; coding: utf-8 -*-" > jukebox.spec
+        echo "a = Analysis(" >> jukebox.spec
+        echo "    ['jukebox.py']," >> jukebox.spec
+        echo "    pathex=[]," >> jukebox.spec
+        echo "    binaries=[]," >> jukebox.spec
+        echo "    datas=[('jukebox.html', '.')]," >> jukebox.spec
+        echo "    hiddenimports=['http.server', 'socketserver', 'webbrowser', 'pathlib', 'json', 'threading', 'urllib.parse']," >> jukebox.spec
+        echo "    hookspath=[]," >> jukebox.spec
+        echo "    hooksconfig={}," >> jukebox.spec
+        echo "    runtime_hooks=[]," >> jukebox.spec
+        echo "    excludes=[]," >> jukebox.spec
+        echo "    noarchive=False," >> jukebox.spec
+        echo "    optimize=0," >> jukebox.spec
+        echo ")" >> jukebox.spec
+        echo "pyz = PYZ(a.pure)" >> jukebox.spec
+        echo "exe = EXE(" >> jukebox.spec
+        echo "    pyz," >> jukebox.spec
+        echo "    a.scripts," >> jukebox.spec
+        echo "    a.binaries," >> jukebox.spec
+        echo "    a.datas," >> jukebox.spec
+        echo "    []," >> jukebox.spec
+        echo "    name='BarJukebox32'," >> jukebox.spec
+        echo "    debug=False," >> jukebox.spec
+        echo "    bootloader_ignore_signals=False," >> jukebox.spec
+        echo "    strip=False," >> jukebox.spec
+        echo "    upx=False," >> jukebox.spec
+        echo "    upx_exclude=[]," >> jukebox.spec
+        echo "    runtime_tmpdir=None," >> jukebox.spec
+        echo "    console=False," >> jukebox.spec
+        echo "    disable_windowed_traceback=False," >> jukebox.spec
+        echo "    argv_emulation=False," >> jukebox.spec
+        echo "    target_arch='x86'," >> jukebox.spec
+        echo "    codesign_identity=None," >> jukebox.spec
+        echo "    entitlements_file=None," >> jukebox.spec
+        echo ")" >> jukebox.spec
+    
+    - name: Build with spec file
+      run: pyinstaller jukebox.spec
+    
+    - name: Verify build
+      run: |
+        if (Test-Path "dist/BarJukebox32.exe") {
+          Write-Host "✓ EXE created successfully"
+          $fileSize = (Get-Item "dist/BarJukebox32.exe").Length / 1MB
+          Write-Host "Size: $([math]::Round($fileSize, 2)) MB"
+        } else {
+          Write-Error "Build failed - EXE not found"
+          exit 1
+        }
+    
+    - name: Upload Complete EXE
+      uses: actions/upload-artifact@v4
+      with:
+        name: BarJukebox-Win7-Complete-32bit
+        path: dist/BarJukebox32.exe
+        retention-days: 30
