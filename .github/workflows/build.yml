@@ -18,17 +18,14 @@ jobs:
         architecture: 'x86'
     
     - name: Install dependencies
-      shell: cmd
-      run: |
-        pip install pyinstaller
+      run: pip install pyinstaller
     
     - name: Build 32bit EXE
-      shell: cmd
-      run: |
-        pyinstaller --onefile --noconsole --windowed --add-data "jukebox.html;." --name "BarJukebox32" jukebox.py
+      run: pyinstaller --onefile --windowed --add-data "jukebox.html;." --name "BarJukebox32" jukebox.py
     
     - name: Upload EXE
       uses: actions/upload-artifact@v4
       with:
         name: BarJukebox-Win7-32bit
         path: dist/BarJukebox32.exe
+        retention-days: 30
